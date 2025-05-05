@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import EmailSettingsModal from './components/EmailSettingsModal';
 import ToastNotification from './components/ToastNotification';
 import './App.css';
@@ -13,8 +13,6 @@ function App() {
   const [endIndex, setEndIndex] = useState(0);
   const [totalCompanies, setTotalCompanies] = useState(null);
   const [isSending, setIsSending] = useState(false);
-  const [emailTasks, setEmailTasks] = useState([]);
-  const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
 
   const handleOpenModal = () => {
     console.log('Opening Email Settings Modal');
@@ -72,8 +70,8 @@ function App() {
     setTimeout(() => setShowToast(false), 3000);
   };
 
-  const handleGenerateEmails = async () => {
-    console.log('Generate Emails button clicked');
+  const handleSendEmails = async () => {
+    console.log('Send Emails button clicked');
     if (isSending) {
       setToastMessage('Email processing is already in progress. Please wait.');
       setShowToast(true);
@@ -103,12 +101,11 @@ function App() {
     }
 
     setIsSending(true);
-    setCurrentTaskIndex(0);
-    setToastMessage('Generating emails, please wait...');
+    setToastMessage('Sending emails, please wait...');
     setShowToast(true);
 
     try {
-      const response = await fetch('https://email-backend-beta-two.vercel.app/api/generate-emails', {
+      const response = await fetch('https://email-backend-beta-two.vercel.app/api/send-emails', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -124,80 +121,15 @@ function App() {
       const result = await response.json();
       console.log('Backend response:', result);
       setToastMessage(result.message);
-      if (result.email_tasks && result.email_tasks.length > 0) {
-        console.log('Setting email tasks:', result.email_tasks);
-        setEmailTasks(result.email_tasks);
-      } else {
-        console.log('No email tasks returned from backend');
-        setToastMessage('No emails to process. Check the data or index range.');
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 3000);
-        setIsSending(false);
-      }
     } catch (error) {
       console.error('Fetch error:', error);
-      setToastMessage(`Error generating emails: ${error.message}`);
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 3000);
+      setToastMessage(`Error sending emails: ${error.message}`);
+    } finally {
       setIsSending(false);
     }
-  };
 
-  // Use useEffect to trigger processNextEmail after emailTasks is updated
-  useEffect(() => {
-    if (emailTasks.length > 0 && isSending) {
-      console.log('emailTasks updated, starting to process emails');
-      processNextEmail();
-    }
-  }, [emailTasks]);
-
-  const processNextEmail = () => {
-    console.log(`Current task index: ${currentTaskIndex}, Total tasks: ${emailTasks.length}`);
-    if (currentTaskIndex >= emailTasks.length) {
-      console.log('Finished processing all email tasks');
-      setToastMessage('Finished processing all emails');
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 3000);
-      setIsSending(false);
-      return;
-    }
-
-    const task = emailTasks[currentTaskIndex];
-    console.log(`Processing email for ${task.company}, Status: ${task.status}, Mailto link: ${task.mailto_link}`);
-
-    if (task.status === 'skipped') {
-      console.log(`Skipping ${task.company}: ${task.reason}`);
-      setToastMessage(`Skipped ${task.company}: ${task.reason}`);
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 3000);
-      setCurrentTaskIndex(currentTaskIndex + 1);
-      setTimeout(processNextEmail, 2000); // Short delay for skipped tasks
-      return;
-    }
-
-    // Attempt to open the mailto link
-    try {
-      console.log(`Attempting to open mailto link: ${task.mailto_link}`);
-      const opened = window.open(task.mailto_link, '_self'); // Use '_self' to avoid popup blockers
-      if (opened || window.location.href === task.mailto_link) {
-        console.log(`Successfully opened mailto link for ${task.company}`);
-        setToastMessage(`Opened email for ${task.company} (${task.recipients.join(', ')}). Please send the email from your email client.`);
-      } else {
-        console.warn(`Failed to open mailto link for ${task.company}. Browser may have blocked the action.`);
-        setToastMessage(`Could not open email for ${task.company}. Please click this link to open manually: ${task.mailto_link}`);
-      }
-    } catch (error) {
-      console.error(`Error opening mailto link for ${task.company}:`, error);
-      setToastMessage(`Error opening email for ${task.company}. Please click this link to open manually: ${task.mailto_link}`);
-    }
     setShowToast(true);
     setTimeout(() => setShowToast(false), 5000);
-
-    // Wait 2 minutes before processing the next email
-    setTimeout(() => {
-      setCurrentTaskIndex(currentTaskIndex + 1);
-      processNextEmail();
-    }, 120000); // 2 minutes in milliseconds
   };
 
   return (
@@ -268,11 +200,11 @@ function App() {
             </div>
             <button
               className="send-btn"
-              onClick={handleGenerateEmails}
+              onClick={handleSendEmails}
               disabled={isSending}
               style={{ opacity: isSending ? 0.6 : 1, cursor: isSending ? 'not-allowed' : 'pointer' }}
             >
-              {isSending ? 'Processing Emails...' : (
+              {isSending ? 'Sending Emails...' : (
                 <>
                   <svg className="send-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="22" y1="2" x2="11" y2="13"></line>
