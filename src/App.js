@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import EmailSettingsModal from './components/EmailSettingsModal';
 import ToastNotification from './components/ToastNotification';
 import './App.css';
@@ -27,7 +27,6 @@ function App() {
   };
 
   const handleSaveSettings = () => {
-    // No longer needed since email and password are not required
     handleCloseModal();
   };
 
@@ -128,7 +127,6 @@ function App() {
       if (result.email_tasks && result.email_tasks.length > 0) {
         console.log('Setting email tasks:', result.email_tasks);
         setEmailTasks(result.email_tasks);
-        setTimeout(() => processNextEmail(), 0); // Ensure state is updated before calling
       } else {
         console.log('No email tasks returned from backend');
         setToastMessage('No emails to process. Check the data or index range.');
@@ -144,6 +142,14 @@ function App() {
       setIsSending(false);
     }
   };
+
+  // Use useEffect to trigger processNextEmail after emailTasks is updated
+  useEffect(() => {
+    if (emailTasks.length > 0 && isSending) {
+      console.log('emailTasks updated, starting to process emails');
+      processNextEmail();
+    }
+  }, [emailTasks]);
 
   const processNextEmail = () => {
     console.log(`Current task index: ${currentTaskIndex}, Total tasks: ${emailTasks.length}`);
@@ -172,17 +178,17 @@ function App() {
     // Attempt to open the mailto link
     try {
       console.log(`Attempting to open mailto link: ${task.mailto_link}`);
-      const opened = window.open(task.mailto_link, '_blank');
-      if (opened) {
+      const opened = window.open(task.mailto_link, '_self'); // Use '_self' to avoid popup blockers
+      if (opened || window.location.href === task.mailto_link) {
         console.log(`Successfully opened mailto link for ${task.company}`);
         setToastMessage(`Opened email for ${task.company} (${task.recipients.join(', ')}). Please send the email from your email client.`);
       } else {
-        console.warn(`Failed to open mailto link for ${task.company}. Browser may have blocked the popup.`);
-        setToastMessage(`Could not open email for ${task.company}. Please allow popups or manually open this link: ${task.mailto_link}`);
+        console.warn(`Failed to open mailto link for ${task.company}. Browser may have blocked the action.`);
+        setToastMessage(`Could not open email for ${task.company}. Please click this link to open manually: ${task.mailto_link}`);
       }
     } catch (error) {
       console.error(`Error opening mailto link for ${task.company}:`, error);
-      setToastMessage(`Error opening email for ${task.company}. Please manually open this link: ${task.mailto_link}`);
+      setToastMessage(`Error opening email for ${task.company}. Please click this link to open manually: ${task.mailto_link}`);
     }
     setShowToast(true);
     setTimeout(() => setShowToast(false), 5000);
