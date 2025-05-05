@@ -123,25 +123,32 @@ function App() {
         throw new Error(errorData || `HTTP error! status: ${response.status}`);
       }
       const result = await response.json();
+      console.log('Backend response:', result);
       setToastMessage(result.message);
-      if (result.email_tasks) {
+      if (result.email_tasks && result.email_tasks.length > 0) {
+        console.log('Setting email tasks:', result.email_tasks);
         setEmailTasks(result.email_tasks);
-        processNextEmail();
+        setTimeout(() => processNextEmail(), 0); // Ensure state is updated before calling
       } else {
+        console.log('No email tasks returned from backend');
+        setToastMessage('No emails to process. Check the data or index range.');
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
         setIsSending(false);
       }
     } catch (error) {
       console.error('Fetch error:', error);
       setToastMessage(`Error generating emails: ${error.message}`);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
       setIsSending(false);
     }
-
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 3000);
   };
 
   const processNextEmail = () => {
+    console.log(`Current task index: ${currentTaskIndex}, Total tasks: ${emailTasks.length}`);
     if (currentTaskIndex >= emailTasks.length) {
+      console.log('Finished processing all email tasks');
       setToastMessage('Finished processing all emails');
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
@@ -150,9 +157,10 @@ function App() {
     }
 
     const task = emailTasks[currentTaskIndex];
-    console.log(`Processing email for ${task.company}`);
+    console.log(`Processing email for ${task.company}, Status: ${task.status}, Mailto link: ${task.mailto_link}`);
 
     if (task.status === 'skipped') {
+      console.log(`Skipping ${task.company}: ${task.reason}`);
       setToastMessage(`Skipped ${task.company}: ${task.reason}`);
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
@@ -161,11 +169,23 @@ function App() {
       return;
     }
 
-    // Open the mailto link
-    window.open(task.mailto_link, '_blank');
-    setToastMessage(`Opened email for ${task.company} (${task.recipients.join(', ')}). Please send the email from your email client.`);
+    // Attempt to open the mailto link
+    try {
+      console.log(`Attempting to open mailto link: ${task.mailto_link}`);
+      const opened = window.open(task.mailto_link, '_blank');
+      if (opened) {
+        console.log(`Successfully opened mailto link for ${task.company}`);
+        setToastMessage(`Opened email for ${task.company} (${task.recipients.join(', ')}). Please send the email from your email client.`);
+      } else {
+        console.warn(`Failed to open mailto link for ${task.company}. Browser may have blocked the popup.`);
+        setToastMessage(`Could not open email for ${task.company}. Please allow popups or manually open this link: ${task.mailto_link}`);
+      }
+    } catch (error) {
+      console.error(`Error opening mailto link for ${task.company}:`, error);
+      setToastMessage(`Error opening email for ${task.company}. Please manually open this link: ${task.mailto_link}`);
+    }
     setShowToast(true);
-    setTimeout(() => setShowToast(false), 3000);
+    setTimeout(() => setShowToast(false), 5000);
 
     // Wait 2 minutes before processing the next email
     setTimeout(() => {
