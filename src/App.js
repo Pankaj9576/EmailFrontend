@@ -34,34 +34,39 @@ function App() {
 
   const handleFileChange = async (event) => {
     const file = event.target.files[0];
-    if (file) {
-      setSelectedFile(file);
-      setToastMessage(`File selected: ${file.name}`);
+    if (!file) {
+      setToastMessage('No file selected. Please choose an Excel file.');
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
-
-      const formData = new FormData();
-      formData.append('file', file);
-      try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/upload-excel`, {
-          method: 'POST',
-          body: formData,
-        });
-        const result = await response.json();
-        if (response.ok) {
-          setTotalCompanies(result.total_companies);
-          setToastMessage(`Processed ${result.total_companies} companies`);
-        } else {
-          setTotalCompanies(null);
-          setToastMessage(`Upload failed: ${result.error}`);
-        }
-      } catch (error) {
-        setTotalCompanies(null);
-        setToastMessage(`Upload error: ${error.message}`);
-      }
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 3000);
+      return;
     }
+
+    setSelectedFile(file);
+    setToastMessage(`File selected: ${file.name}`);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/upload-excel`, {
+        method: 'POST',
+        body: formData,
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+      const result = await response.json();
+      setTotalCompanies(result.total_companies);
+      setToastMessage(`Processed ${result.total_companies} companies`);
+    } catch (error) {
+      console.error('Upload error:', error);
+      setTotalCompanies(null);
+      setToastMessage(`Upload failed: ${error.message}`);
+    }
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
   };
 
   const handleSendEmails = async () => {
@@ -74,14 +79,14 @@ function App() {
     }
 
     if (!email || !password) {
-      setToastMessage('Email not found');
+      setToastMessage('Please set your email and password in Email Settings.');
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
       return;
     }
 
     if (!selectedFile) {
-      setToastMessage('Please upload an Excel file first');
+      setToastMessage('Please upload an Excel file first.');
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
       return;
@@ -89,6 +94,13 @@ function App() {
 
     if (totalCompanies === null) {
       setToastMessage('No companies processed. Please upload a valid Excel file.');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+      return;
+    }
+
+    if (startIndex < 0 || endIndex >= totalCompanies || startIndex > endIndex) {
+      setToastMessage('Invalid index range. Please check Start Index and End Index.');
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
       return;
@@ -110,14 +122,13 @@ function App() {
       console.log(`Response status: ${response.status}`);
       const result = await response.json();
       console.log(`Response body: ${JSON.stringify(result)}`);
-      if (response.ok) {
-        setToastMessage(result.message);
-      } else {
-        setToastMessage(`Error: ${result.error}`);
+      if (!response.ok) {
+        throw new Error(result.error || `HTTP error! status: ${response.status}`);
       }
+      setToastMessage(result.message);
     } catch (error) {
-      console.log(`Fetch error: ${error.message}`);
-      setToastMessage(`Error: ${error.message}`);
+      console.error('Fetch error:', error);
+      setToastMessage(`Error sending emails: ${error.message}`);
     } finally {
       setIsSending(false);
     }
