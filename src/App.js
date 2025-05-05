@@ -4,8 +4,6 @@ import ToastNotification from './components/ToastNotification';
 import './App.css';
 
 function App() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -15,6 +13,8 @@ function App() {
   const [endIndex, setEndIndex] = useState(0);
   const [totalCompanies, setTotalCompanies] = useState(null);
   const [isSending, setIsSending] = useState(false);
+  const [emailTasks, setEmailTasks] = useState([]);
+  const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
 
   const handleOpenModal = () => {
     console.log('Opening Email Settings Modal');
@@ -26,9 +26,8 @@ function App() {
     setIsModalOpen(false);
   };
 
-  const handleSaveSettings = (newEmail, newPassword) => {
-    setEmail(newEmail);
-    setPassword(newPassword);
+  const handleSaveSettings = () => {
+    // No longer needed since email and password are not required
     handleCloseModal();
   };
 
@@ -64,7 +63,6 @@ function App() {
       console.error('Upload error:', error);
       setTotalCompanies(null);
       setToastMessage(`Upload failed: ${error.message}`);
-      // Log more details for debugging
       console.log('Error details:', {
         message: error.message,
         stack: error.stack,
@@ -75,17 +73,10 @@ function App() {
     setTimeout(() => setShowToast(false), 3000);
   };
 
-  const handleSendEmails = async () => {
-    console.log('Send Emails button clicked');
+  const handleGenerateEmails = async () => {
+    console.log('Generate Emails button clicked');
     if (isSending) {
-      setToastMessage('Emails are already being sent. Please wait.');
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 3000);
-      return;
-    }
-
-    if (!email || !password) {
-      setToastMessage('Please set your email and password in Email Settings.');
+      setToastMessage('Email processing is already in progress. Please wait.');
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
       return;
@@ -113,16 +104,17 @@ function App() {
     }
 
     setIsSending(true);
-    setToastMessage('Sending emails, please wait...');
+    setCurrentTaskIndex(0);
+    setToastMessage('Generating emails, please wait...');
     setShowToast(true);
 
     try {
-      const response = await fetch('https://email-backend-beta-two.vercel.app/api/send-emails', {
+      const response = await fetch('https://email-backend-beta-two.vercel.app/api/generate-emails', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password, startIndex, endIndex }),
+        body: JSON.stringify({ startIndex, endIndex }),
       });
 
       console.log(`Response status: ${response.status}`);
@@ -132,15 +124,54 @@ function App() {
       }
       const result = await response.json();
       setToastMessage(result.message);
+      if (result.email_tasks) {
+        setEmailTasks(result.email_tasks);
+        processNextEmail();
+      } else {
+        setIsSending(false);
+      }
     } catch (error) {
       console.error('Fetch error:', error);
-      setToastMessage(`Error sending emails: ${error.message}`);
-    } finally {
+      setToastMessage(`Error generating emails: ${error.message}`);
       setIsSending(false);
     }
 
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
+  };
+
+  const processNextEmail = () => {
+    if (currentTaskIndex >= emailTasks.length) {
+      setToastMessage('Finished processing all emails');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+      setIsSending(false);
+      return;
+    }
+
+    const task = emailTasks[currentTaskIndex];
+    console.log(`Processing email for ${task.company}`);
+
+    if (task.status === 'skipped') {
+      setToastMessage(`Skipped ${task.company}: ${task.reason}`);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+      setCurrentTaskIndex(currentTaskIndex + 1);
+      setTimeout(processNextEmail, 2000); // Short delay for skipped tasks
+      return;
+    }
+
+    // Open the mailto link
+    window.open(task.mailto_link, '_blank');
+    setToastMessage(`Opened email for ${task.company} (${task.recipients.join(', ')}). Please send the email from your email client.`);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+
+    // Wait 2 minutes before processing the next email
+    setTimeout(() => {
+      setCurrentTaskIndex(currentTaskIndex + 1);
+      processNextEmail();
+    }, 120000); // 2 minutes in milliseconds
   };
 
   return (
@@ -211,11 +242,11 @@ function App() {
             </div>
             <button
               className="send-btn"
-              onClick={handleSendEmails}
+              onClick={handleGenerateEmails}
               disabled={isSending}
               style={{ opacity: isSending ? 0.6 : 1, cursor: isSending ? 'not-allowed' : 'pointer' }}
             >
-              {isSending ? 'Sending Emails...' : (
+              {isSending ? 'Processing Emails...' : (
                 <>
                   <svg className="send-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="22" y1="2" x2="11" y2="13"></line>
