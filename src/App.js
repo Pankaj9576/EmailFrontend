@@ -43,7 +43,7 @@ function App() {
       const formData = new FormData();
       formData.append('file', file);
       try {
-        const response = await fetch('http://localhost:5000/upload-excel', {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/upload-excel`, {
           method: 'POST',
           body: formData,
         });
@@ -99,7 +99,7 @@ function App() {
     setShowToast(true);
 
     try {
-      const response = await fetch('http://localhost:5000/send-emails', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/send-emails`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
