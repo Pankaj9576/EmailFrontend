@@ -108,6 +108,11 @@ main {
   font-size: 14px;
 }
 
+.form-group label.first {
+  color: #333;
+  font-weight: bold;
+}
+
 .choose-file-btn {
   display: inline-block;
   padding: 8px 15px;

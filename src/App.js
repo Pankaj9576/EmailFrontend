@@ -54,7 +54,7 @@ function App() {
         body: formData,
       });
       if (!response.ok) {
-        const errorData = await response.text(); // Use text() instead of json() to handle non-JSON responses
+        const errorData = await response.text();
         throw new Error(errorData || `HTTP error! status: ${response.status}`);
       }
       const result = await response.json();
@@ -64,6 +64,12 @@ function App() {
       console.error('Upload error:', error);
       setTotalCompanies(null);
       setToastMessage(`Upload failed: ${error.message}`);
+      // Log more details for debugging
+      console.log('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        response: error.response ? error.response : 'No response data',
+      });
     }
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
