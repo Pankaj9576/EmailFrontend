@@ -4,6 +4,8 @@ import ToastNotification from './components/ToastNotification';
 import './App.css';
 
 function App() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -24,7 +26,9 @@ function App() {
     setIsModalOpen(false);
   };
 
-  const handleSaveSettings = () => {
+  const handleSaveSettings = (newEmail, newPassword) => {
+    setEmail(newEmail);
+    setPassword(newPassword);
     handleCloseModal();
   };
 
@@ -50,8 +54,8 @@ function App() {
         body: formData,
       });
       if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(errorData || `HTTP error! status: ${response.status}`);
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
       const result = await response.json();
       setTotalCompanies(result.total_companies);
@@ -60,11 +64,6 @@ function App() {
       console.error('Upload error:', error);
       setTotalCompanies(null);
       setToastMessage(`Upload failed: ${error.message}`);
-      console.log('Error details:', {
-        message: error.message,
-        stack: error.stack,
-        response: error.response ? error.response : 'No response data',
-      });
     }
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
@@ -74,6 +73,13 @@ function App() {
     console.log('Send Emails button clicked');
     if (isSending) {
       setToastMessage('Email processing is already in progress. Please wait.');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+      return;
+    }
+
+    if (!email || !password) {
+      setToastMessage('Please configure email settings first.');
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
       return;
@@ -110,13 +116,12 @@ function App() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ startIndex, endIndex }),
+        body: JSON.stringify({ email, password, startIndex, endIndex }),
       });
 
-      console.log(`Response status: ${response.status}`);
       if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(errorData || `HTTP error! status: ${response.status}`);
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
       const result = await response.json();
       console.log('Backend response:', result);
@@ -160,7 +165,7 @@ function App() {
         {activeTab === 'send-emails' && (
           <div className="form">
             <div className="form-group">
-              <label className='first'>Select Excel File</label>
+              <label className="first">Select Excel File</label>
               <input
                 type="file"
                 accept=".xlsx,.xls"
