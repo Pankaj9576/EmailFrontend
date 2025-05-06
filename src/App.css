@@ -78,6 +78,7 @@ main {
 
 .tabs button:hover {
   background-color: #e0e0e0;
+  color: #d00000;
   transform: translateY(-1px);
 }
 
