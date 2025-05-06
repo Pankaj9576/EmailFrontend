@@ -15,6 +15,7 @@ function App() {
   const [endIndex, setEndIndex] = useState(0);
   const [totalCompanies, setTotalCompanies] = useState(null);
   const [isSending, setIsSending] = useState(false);
+  const [emailFormat, setEmailFormat] = useState('General Email');
 
   const handleOpenModal = () => {
     console.log('Opening Email Settings Modal');
@@ -37,14 +38,14 @@ function App() {
     if (!file) {
       setToastMessage('No file selected. Please choose an Excel file.');
       setShowToast(true);
-      setTimeout(() => setShowToast(false), 3000);
+      setTimeout(() => setShowToast(false), 4000);
       return;
     }
 
     setSelectedFile(file);
     setToastMessage(`File selected: ${file.name}`);
     setShowToast(true);
-    setTimeout(() => setShowToast(false), 3000);
+    setTimeout(() => setShowToast(false), 4000);
 
     const formData = new FormData();
     formData.append('file', file);
@@ -66,7 +67,7 @@ function App() {
       setToastMessage(`Upload failed: ${error.message}`);
     }
     setShowToast(true);
-    setTimeout(() => setShowToast(false), 3000);
+    setTimeout(() => setShowToast(false), 4000);
   };
 
   const handleSendEmails = async () => {
@@ -74,41 +75,42 @@ function App() {
     if (isSending) {
       setToastMessage('Email processing is already in progress. Please wait.');
       setShowToast(true);
-      setTimeout(() => setShowToast(false), 3000);
+      setTimeout(() => setShowToast(false), 4000);
       return;
     }
 
     if (!email || !password) {
       setToastMessage('Please configure email settings first.');
       setShowToast(true);
-      setTimeout(() => setShowToast(false), 3000);
+      setTimeout(() => setShowToast(false), 4000);
       return;
     }
 
     if (!selectedFile) {
       setToastMessage('Please upload an Excel file first.');
       setShowToast(true);
-      setTimeout(() => setShowToast(false), 3000);
+      setTimeout(() => setShowToast(false), 4000);
       return;
     }
 
     if (totalCompanies === null) {
       setToastMessage('No companies processed. Please upload a valid Excel file.');
       setShowToast(true);
-      setTimeout(() => setShowToast(false), 3000);
+      setTimeout(() => setShowToast(false), 4000);
       return;
     }
 
     if (startIndex < 0 || endIndex >= totalCompanies || startIndex > endIndex) {
       setToastMessage('Invalid index range. Please check Start Index and End Index.');
       setShowToast(true);
-      setTimeout(() => setShowToast(false), 3000);
+      setTimeout(() => setShowToast(false), 4000);
       return;
     }
 
     setIsSending(true);
     setToastMessage('Sending emails, please wait...');
     setShowToast(true);
+    setTimeout(() => setShowToast(false), 4000);
 
     try {
       const response = await fetch('https://email-backend-beta-two.vercel.app/api/send-emails', {
@@ -116,7 +118,7 @@ function App() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password, startIndex, endIndex }),
+        body: JSON.stringify({ email, password, startIndex, endIndex, emailFormat }),
       });
 
       if (!response.ok) {
@@ -126,10 +128,9 @@ function App() {
       const result = await response.json();
       console.log('Backend response:', result);
       setToastMessage(result.message);
-      // Refresh page after showing success message for 3 seconds
       setTimeout(() => {
         window.location.reload();
-      }, 3000);
+      }, 4000);
     } catch (error) {
       console.error('Fetch error:', error);
       setToastMessage(`Error sending emails: ${error.message}`);
@@ -138,7 +139,7 @@ function App() {
     }
 
     setShowToast(true);
-    setTimeout(() => setShowToast(false), 5000);
+    setTimeout(() => setShowToast(false), 4000);
   };
 
   return (
@@ -185,8 +186,12 @@ function App() {
             </div>
             <div className="form-group">
               <label>Select Email Format</label>
-              <select>
-                <option>General Email</option>
+              <select
+                value={emailFormat}
+                onChange={(e) => setEmailFormat(e.target.value)}
+              >
+                <option value="General Email">General Email</option>
+                <option value="Meeting Email">Meeting Email</option>
               </select>
             </div>
             <div className="form-group inline">
