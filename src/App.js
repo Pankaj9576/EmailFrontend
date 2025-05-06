@@ -126,6 +126,10 @@ function App() {
       const result = await response.json();
       console.log('Backend response:', result);
       setToastMessage(result.message);
+      // Refresh page after showing success message for 3 seconds
+      setTimeout(() => {
+        window.location.reload();
+      }, 3000);
     } catch (error) {
       console.error('Fetch error:', error);
       setToastMessage(`Error sending emails: ${error.message}`);
