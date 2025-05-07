@@ -375,7 +375,7 @@ function App() {
             <h2>Email Preview - {emailFormat}</h2>
             <div className="email-preview-content" dangerouslySetInnerHTML={{ __html: getEmailPreviewContent() }} />
             <div className="modal-buttons">
-              <button onClick={handleClosePreviewModal} style={{backgroundColor:red}}>Close</button>
+              <button onClick={handleClosePreviewModal} style={{backgroundColor:'red'}}>Close</button>
             </div>
           </div>
         </div>
