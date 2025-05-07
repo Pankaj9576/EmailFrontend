@@ -54,20 +54,24 @@ main {
 .tabs {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  gap: 24px;
   margin-bottom: 20px;
+  width: 100%;
 }
 
 .tabs button {
+  flex: 1;
   padding: 10px 20px;
   border: none;
   background-color: #f0f0f0;
   cursor: pointer;
   font-size: 14px;
   font-weight: bold;
-  border-radius: 5px;
   transition: background-color 0.3s, transform 0.1s;
+  border-right: 1px solid #ccc;
+}
+
+.tabs button:last-child {
+  border-right: none;
 }
 
 .tabs button.active {
@@ -82,17 +86,9 @@ main {
   transform: translateY(-1px);
 }
 
-.email-settings-btn {
-  background-color: #f0f0f0;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s, transform 0.1s;
-}
-
-.email-settings-btn:hover {
-  background-color: #e0e0e0;
-  transform: translateY(-1px);
+.tabs button.active:hover {
+  background-color: #b00000;
+  color: white;
 }
 
 .form-group {
@@ -193,6 +189,43 @@ select:focus, input[type="number"]:focus {
 .send-icon {
   width: 20px;
   height: 20px;
+}
+
+.companies-table {
+  margin-top: 20px;
+}
+
+.companies-table h3 {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.companies-table table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.companies-table th, .companies-table td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+  font-size: 14px;
+}
+
+.companies-table th {
+  background-color: #f0f0f0;
+  font-weight: bold;
+  color: #333;
+}
+
+.companies-table td {
+  color: #666;
+}
+
+.companies-table tr:hover {
+  background-color: #f9f9f9;
 }
 
 .modal {

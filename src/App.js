@@ -16,6 +16,7 @@ function App() {
   const [totalCompanies, setTotalCompanies] = useState(null);
   const [isSending, setIsSending] = useState(false);
   const [emailFormat, setEmailFormat] = useState('General Email');
+  const [companiesList, setCompaniesList] = useState([]);
 
   const handleOpenModal = () => {
     console.log('Opening Email Settings Modal');
@@ -61,6 +62,8 @@ function App() {
       const result = await response.json();
       setTotalCompanies(result.total_companies);
       setToastMessage(`Processed ${result.total_companies} companies`);
+      // Fetch companies list after successful upload
+      fetchCompanies();
     } catch (error) {
       console.error('Upload error:', error);
       setTotalCompanies(null);
@@ -68,6 +71,28 @@ function App() {
     }
     setShowToast(true);
     setTimeout(() => setShowToast(false), 4000);
+  };
+
+  const fetchCompanies = async () => {
+    try {
+      const response = await fetch('https://email-backend-beta-two.vercel.app/api/get-companies', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+      const result = await response.json();
+      setCompaniesList(result.companies);
+    } catch (error) {
+      console.error('Fetch companies error:', error);
+      setToastMessage(`Error fetching companies: ${error.message}`);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 4000);
+    }
   };
 
   const handleSendEmails = async () => {
@@ -163,7 +188,24 @@ function App() {
           >
             Send Emails
           </button>
-          <button className="email-settings-btn" onClick={handleOpenModal}>
+          <button
+            className={activeTab === 'available-companies' ? 'active' : ''}
+            onClick={() => {
+              console.log('Switching to Available Companies tab');
+              setActiveTab('available-companies');
+              if (totalCompanies !== null) fetchCompanies();
+            }}
+          >
+            Available Companies
+          </button>
+          <button
+            className={activeTab === 'email-settings' ? 'active' : 'email-settings-btn'}
+            onClick={() => {
+              console.log('Switching to Email Settings tab');
+              setActiveTab('email-settings');
+              handleOpenModal();
+            }}
+          >
             Email Settings
           </button>
         </div>
@@ -228,6 +270,31 @@ function App() {
                 </>
               )}
             </button>
+          </div>
+        )}
+        {activeTab === 'available-companies' && (
+          <div className="companies-table">
+            <h3>Available Companies</h3>
+            {companiesList.length > 0 ? (
+              <table>
+                <thead>
+                  <tr>
+                    <th>Index</th>
+                    <th>Company Name</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {companiesList.map((company, index) => (
+                    <tr key={index}>
+                      <td>{index}</td>
+                      <td>{company}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p>No companies available. Please upload an Excel file first.</p>
+            )}
           </div>
         )}
       </main>
