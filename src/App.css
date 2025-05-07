@@ -353,7 +353,7 @@ select:focus, input[type="number"]:focus {
 }
 
 .modal-buttons button:last-child:hover {
-  background-color: #b3b3b3;
+  background-color: #E02B35;
   transform: translateY(-1px);
 }
 
@@ -363,7 +363,7 @@ select:focus, input[type="number"]:focus {
 }
 
 .preview-modal .modal-buttons button:hover {
-  background-color: #b3b3b3;
+  background-color:rgb(228, 61, 69);
   transform: translateY(-1px);
 }
 
