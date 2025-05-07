@@ -7,6 +7,7 @@ function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [activeTab, setActiveTab] = useState('send-emails');
@@ -26,6 +27,16 @@ function App() {
   const handleCloseModal = () => {
     console.log('Closing Email Settings Modal');
     setIsModalOpen(false);
+  };
+
+  const handleOpenPreviewModal = () => {
+    console.log('Opening Email Preview Modal');
+    setIsPreviewModalOpen(true);
+  };
+
+  const handleClosePreviewModal = () => {
+    console.log('Closing Email Preview Modal');
+    setIsPreviewModalOpen(false);
   };
 
   const handleSaveSettings = (newEmail, newPassword) => {
@@ -62,7 +73,6 @@ function App() {
       const result = await response.json();
       setTotalCompanies(result.total_companies);
       setToastMessage(`Processed ${result.total_companies} companies`);
-      // Fetch companies list after successful upload
       fetchCompanies();
     } catch (error) {
       console.error('Upload error:', error);
@@ -167,6 +177,57 @@ function App() {
     setTimeout(() => setShowToast(false), 4000);
   };
 
+  const getEmailPreviewContent = () => {
+    const names_list = '[Recipient Names]';
+    const patents_str = '[Patent Numbers]';
+    if (emailFormat === 'Meeting Email') {
+      return `
+        <html>
+        <body>
+        <p style="font-size: 10.5pt;">
+            Hi ${names_list},<br><br>
+            Hope this email finds you well.<br><br>
+            We have identified patents ${patents_str} etc. as potential candidates for monetization and believe there is a significant opportunity for your organization.<br><br>
+            We would love to schedule a meeting to discuss this further and explore how we can collaborate with your team. Please let us know a convenient time for a call or virtual meeting.<br><br>
+            Feel free to suggest a date and time, or you can book a slot directly via our calendar: <a href="https://calendly.com/bayslope/meeting">Schedule a Meeting</a>.<br><br>
+            Looking forward to your response.<br><br>
+            Best regards,<br>
+            Sarita (Sara) / Bayslope<br>
+            Techreport99 | Bayslope<br>
+            e: <a href="mailto:patents@bayslope.com">patents@bayslope.com</a><br>
+            p: +91-9811967160 (IN), +1 650 353 7723 (US), +44 1392 58 1535 (UK)<br><br>
+            <span style="color: grey; font-size: 8.5pt;">
+                The content of this email message and any attachments are intended solely for the addressee(s) and may contain confidential and/or privileged information...
+            </span>
+        </p>
+        </body>
+        </html>
+      `;
+    } else {
+      return `
+        <html>
+        <body>
+        <p style="font-size: 10.5pt;">
+            Hi ${names_list},<br><br>
+            Hope all is well at your end.<br><br>
+            Our internal framework has identified patents ${patents_str} etc. and we think there is a monetization opportunity for them.<br><br>
+            We work closely with a network of active buyers who regularly acquire high-quality patents for monetization across various technology sectors.<br><br>
+            Could you help facilitate a discussion with your client about this matter?<br><br>
+            Best regards,<br>
+            Sarita (Sara) / Bayslope<br>
+            Techreport99 | Bayslope<br>
+            e: <a href="mailto:patents@bayslope.com">patents@bayslope.com</a><br>
+            p: +91-9811967160 (IN), +1 650 353 7723 (US), +44 1392 58 1535 (UK)<br><br>
+            <span style="color: grey; font-size: 8.5pt;">
+                The content of this email message and any attachments are intended solely for the addressee(s) and may contain confidential and/or privileged information...
+            </span>
+        </p>
+        </body>
+        </html>
+      `;
+    }
+  };
+
   return (
     <div className="App">
       <header className="App-header">
@@ -226,15 +287,20 @@ function App() {
               {selectedFile && <p>Selected: {selectedFile.name}</p>}
               {totalCompanies !== null && <p>Total Companies: {totalCompanies}</p>}
             </div>
-            <div className="form-group">
+            <div className="form-group email-format-group">
               <label>Select Email Format</label>
-              <select
-                value={emailFormat}
-                onChange={(e) => setEmailFormat(e.target.value)}
-              >
-                <option value="General Email">General Email</option>
-                <option value="Meeting Email">Meeting Email</option>
-              </select>
+              <div className="email-format-container">
+                <select
+                  value={emailFormat}
+                  onChange={(e) => setEmailFormat(e.target.value)}
+                >
+                  <option value="General Email">General Email</option>
+                  <option value="Meeting Email">Meeting Email</option>
+                </select>
+                <button className="preview-btn" onClick={handleOpenPreviewModal}>
+                  Preview
+                </button>
+              </div>
             </div>
             <div className="form-group inline">
               <div>
@@ -303,6 +369,17 @@ function App() {
         onClose={handleCloseModal}
         onSave={handleSaveSettings}
       />
+      {isPreviewModalOpen && (
+        <div className="modal">
+          <div className="modal-content preview-modal">
+            <h2>Email Preview - {emailFormat}</h2>
+            <div className="email-preview-content" dangerouslySetInnerHTML={{ __html: getEmailPreviewContent() }} />
+            <div className="modal-buttons">
+              <button onClick={handleClosePreviewModal}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
       <ToastNotification message={toastMessage} isVisible={showToast} />
       <footer>
         <p>© 2025 Bayslope Business Solutions</p>
