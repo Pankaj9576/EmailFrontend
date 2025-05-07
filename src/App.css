@@ -359,7 +359,7 @@ select:focus, input[type="number"]:focus {
 
 .preview-modal .modal-buttons button {
   width: 100%;
-  background-color: #ccc;
+  background-color: E02B35;
 }
 
 .preview-modal .modal-buttons button:hover {
