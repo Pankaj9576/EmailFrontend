@@ -8,12 +8,12 @@
       "type": "image/x-icon"
     },
     {
-      "src": "baylogo.png",
+      "src": "favicon.ico",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "baylogo.png",
+      "src": "favicon.ico",
       "type": "image/png",
       "sizes": "512x512"
     }
